@@ -1,0 +1,130 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'waste_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Waste List
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-trash"></i> {{ waste.title }}
+                </h2>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <!-- Waste Image -->
+                    <div class="col-md-6">
+                        {% if waste.image %}
+                        <img src="{{ waste.image.url }}" class="img-fluid rounded mb-3" alt="{{ waste.title }}" style="max-height: 400px; width: 100%; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" style="height: 300px;">
+                            <i class="bi bi-image text-muted display-4"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Waste Details -->
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h4 class="text-success">Description</h4>
+                            <p class="lead">{{ waste.description }}</p>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <strong>Category:</strong><br>
+                                {% if waste.category %}
+                                <span class="badge bg-secondary fs-6">{{ waste.category.name }}</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark fs-6">No Category</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <strong>Quantity:</strong><br>
+                                <span class="fs-5">{{ waste.quantity }} {{ waste.unit }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <strong>Location:</strong><br>
+                                <span><i class="bi bi-geo-alt"></i> {{ waste.location }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Status:</strong><br>
+                                <span class="badge 
+                                    {% if waste.status == 'available' %}bg-success
+                                    {% elif waste.status == 'pending' %}bg-warning
+                                    {% else %}bg-secondary{% endif %} fs-6">
+                                    {{ waste.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <strong>Posted by:</strong><br>
+                            <div class="d-flex align-items-center mt-1">
+                                <i class="bi bi-person-circle me-2"></i>
+                                <span>{{ waste.poster.username }}</span>
+                                <span class="badge bg-info ms-2">{{ waste.poster.user_type|title }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <strong>Posted on:</strong><br>
+                            <i class="bi bi-calendar me-2"></i>{{ waste.created_at|date:"F d, Y" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Match Form for Collectors/Recyclers -->
+                {% if user.is_authenticated and user.user_type in 'collector recycler' and waste.status == 'available' and user != waste.poster %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-heart"></i> Interested in this waste?
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">
+                                            Send a message to {{ waste.poster.username }}
+                                        </label>
+                                        {{ form.message }}
+                                        <div class="form-text">
+                                            Tell them about your recycling plans, pickup availability, or ask any questions.
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning btn-lg">
+                                        <i class="bi bi-send"></i> Send Match Request
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% elif user.is_authenticated and user == waste.poster %}
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle"></i> This is your waste posting. You'll receive match requests from collectors and recyclers here.
+                </div>
+                {% elif waste.status != 'available' %}
+                <div class="alert alert-warning mt-4">
+                    <i class="bi bi-exclamation-triangle"></i> This waste item is no longer available for matching.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

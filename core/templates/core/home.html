@@ -1,0 +1,138 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center text-white">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">Connecting Waste to Worth in Machakos</h1>
+                <p class="lead mb-4">Transform your waste into resources. Connect households, farmers, collectors, and recyclers for a cleaner environment and greener livelihoods.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg px-4">
+                            <i class="bi bi-speedometer2"></i> My Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4">
+                            <i class="bi bi-person-plus"></i> Join Machawaste
+                        </a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Features Section -->
+<section class="container my-5">
+    <div class="row text-center mb-5">
+        <div class="col">
+            <h2 class="fw-bold">How WasteHub Works</h2>
+            <p class="text-muted">Simple steps to make a difference</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="feature-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-plus-circle-fill text-success fs-1"></i>
+                    </div>
+                    <h5 class="card-title">Post Waste</h5>
+                    <p class="card-text text-muted">List your recyclable materials with photos and details</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="feature-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-search-heart-fill text-primary fs-1"></i>
+                    </div>
+                    <h5 class="card-title">Get Matched</h5>
+                    <p class="card-text text-muted">Our smart algorithm connects you with local collectors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="feature-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-chat-dots-fill text-warning fs-1"></i>
+                    </div>
+                    <h5 class="card-title">Connect</h5>
+                    <p class="card-text text-muted">Chat and arrange convenient pickup times</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="feature-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-award-fill text-info fs-1"></i>
+                    </div>
+                    <h5 class="card-title">Earn Rewards</h5>
+                    <p class="card-text text-muted">Get points and incentives for recycling</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Waste Section -->
+{% if recent_waste %}
+<section class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h3 class="fw-bold">Recently Available Waste</h3>
+            <p class="text-muted">Check out the latest waste items in your community</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for waste in recent_waste %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card waste-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ waste.title }}</h5>
+                    <p class="card-text text-muted">{{ waste.description|truncatewords:20 }}</p>
+                    <div class="d-flex justify-content-between align-items-center text-sm text-muted">
+                        <small><i class="bi bi-person"></i> {{ waste.poster.username }}</small>
+                        <small><i class="bi bi-calendar"></i> {{ waste.created_at|date:"M d" }}</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-sm btn-outline-success w-100">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'waste_list' %}" class="btn btn-success">
+            <i class="bi bi-list-ul"></i> View All Waste Items
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<section class="bg-light py-5 mt-5 rounded-3">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-3">Ready to Make a Difference?</h3>
+        <p class="text-muted mb-4">Join thousands of users turning waste into valuable resources</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'register' %}" class="btn btn-success btn-lg">
+            <i class="bi bi-person-plus"></i> Join WasteHub Today
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

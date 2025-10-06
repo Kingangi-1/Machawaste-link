@@ -1,0 +1,54 @@
+
+/* Custom CSS for WasteHub */
+.hero-section {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    padding: 4rem 0;
+    border-radius: 0 0 30px 30px;
+    margin-bottom: 3rem;
+}
+
+.waste-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-left: 4px solid #27ae60;
+}
+
+.waste-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.file-upload {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload:hover {
+    border-color: #27ae60;
+    background: #f1f8f1;
+}
+
+/* Custom badge colors */
+.badge-available { background-color: #28a745; }
+.badge-pending { background-color: #ffc107; color: #000; }
+.badge-collected { background-color: #6c757d; }

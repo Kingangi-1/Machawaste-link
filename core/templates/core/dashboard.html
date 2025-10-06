@@ -1,0 +1,416 @@
+
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold">
+                <i class="bi bi-speedometer2 text-success"></i> Machawaste Dashboard
+            </h1>
+            {% if user.user_type in 'household farmer' %}
+            <a href="{% url 'post_waste' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Post New Waste
+            </a>
+            {% endif %}
+        </div>
+        
+        <!-- User Info Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="card-title">Karibu, {{ user.username }}! 👋</h5>
+                        <p class="card-text text-muted mb-0">
+                            You are registered as a <strong>{{ user.get_user_type_display }}</strong>
+                            {% if user.phone %} | Phone: {{ user.phone }}{% endif %}
+                            {% if user.location %} | Location: {{ user.location }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <span class="badge bg-success fs-6">{{ user.get_user_type_display|upper }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_waste_posted }}</h4>
+                        <p class="card-text">Waste Items</p>
+                    </div>
+                    <i class="bi bi-trash display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_credits_earned }}</h4>
+                        <p class="card-text">Credits Earned</p>
+                    </div>
+                    <i class="bi bi-coin display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ pending_matches }}</h4>
+                        <p class="card-text">Pending Matches</p>
+                    </div>
+                    <i class="bi bi-bell display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ user.digital_credits }}</h4>
+                        <p class="card-text">Current Credits</p>
+                    </div>
+                    <i class="bi bi-wallet display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Type Specific Guidance -->
+{% if user.user_type in 'household farmer' %}
+<div class="alert alert-info">
+    <h5><i class="bi bi-info-circle"></i> How Machawaste Works for {{ user.get_user_type_display }}s:</h5>
+    <ul class="mb-0">
+        <li>📱 <strong>Post your waste</strong> - List plastics, organic waste, or farm residues</li>
+        <li>🔄 <strong>Get matched</strong> - Local youth/women collectors will request pickup</li>
+        <li>💰 <strong>Earn digital credits</strong> - Get rewarded when waste is collected</li>
+        <li>🎁 <strong>Redeem credits</strong> - Exchange for household items or farm inputs</li>
+    </ul>
+</div>
+{% elif user.user_type == 'collector' %}
+<div class="alert alert-warning">
+    <h5><i class="bi bi-lightning"></i> Collector Opportunities:</h5>
+    <ul class="mb-0">
+        <li>🔍 <strong>Browse available waste</strong> in Machakos area</li>
+        <li>🤝 <strong>Request to collect waste</strong> and build your business</li>
+        <li>📈 <strong>Grow income</strong> through consistent collections</li>
+        <li>🔄 <strong>Connect with recyclers</strong> for better value</li>
+    </ul>
+</div>
+{% elif user.user_type == 'recycler' %}
+<div class="alert alert-success">
+    <h5><i class="bi bi-recycle"></i> Recycler Benefits:</h5>
+    <ul class="mb-0">
+        <li>📦 <strong>Access sorted materials</strong> directly from collectors</li>
+        <li>🏭 <strong>Build reliable supply chains</strong> for your business</li>
+        <li>🌱 <strong>Support circular economy</strong> in Machakos County</li>
+        <li>📊 <strong>Scale your operations</strong> with consistent waste flow</li>
+    </ul>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Left Column - Main Content -->
+    <div class="col-lg-8">
+        <!-- My Waste Posts (for Households/Farmers) -->
+        {% if user.user_type in 'household farmer' %}
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-trash"></i> My Waste Posts
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user_waste %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Waste Item</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Credits</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for waste in user_waste %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ waste.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-geo-alt"></i> {{ waste.location }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ waste.get_waste_type_display }}</span>
+                                    </td>
+                                    <td>{{ waste.quantity }} {{ waste.unit }}</td>
+                                    <td>
+                                        {% if waste.credits_earned > 0 %}
+                                        <span class="badge bg-success">{{ waste.credits_earned }} credits</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if waste.status == 'available' %}bg-success
+                                            {% elif waste.status == 'pending' %}bg-warning
+                                            {% elif waste.status == 'collected' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ waste.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="text-muted mt-3">No waste posts yet</h5>
+                        <p class="text-muted">Start earning digital credits by posting your first waste item!</p>
+                        <a href="{% url 'post_waste' %}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Post Your First Waste Item
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Available Waste (for Collectors/Recyclers) -->
+        {% if user.user_type in 'collector recycler' and available_waste %}
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-search"></i> Available Waste in Your Area
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Waste Item</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Location</th>
+                                <th>Posted By</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for waste in available_waste %}
+                            <tr>
+                                <td>
+                                    <strong>{{ waste.title }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ waste.description|truncatewords:5 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ waste.get_waste_type_display }}</span>
+                                </td>
+                                <td>{{ waste.quantity }} {{ waste.unit }}</td>
+                                <td>
+                                    <small><i class="bi bi-geo-alt"></i> {{ waste.location }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ waste.poster.username }}</small>
+                                    <br>
+                                    <span class="badge bg-light text-dark">{{ waste.poster.get_user_type_display }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-heart"></i> Request
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Match Requests -->
+        {% if matches_received %}
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bell"></i> Collection Requests
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for match in matches_received %}
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="alert-heading">
+                                <i class="bi bi-person-check"></i> 
+                                {{ match.collector.username }} wants to collect your waste
+                            </h6>
+                            <p class="mb-1"><strong>{{ match.waste_item.title }}</strong> - {{ match.waste_item.get_waste_type_display }}</p>
+                            {% if match.message %}
+                            <p class="mb-2"><i>"{{ match.message }}"</i></p>
+                            {% endif %}
+                            <small class="text-muted">Requested on {{ match.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="btn-group">
+                            <a href="{% url 'manage_match' match.pk 'accept' %}" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg"></i> Accept
+                            </a>
+                            <a href="{% url 'manage_match' match.pk 'reject' %}" class="btn btn-sm btn-danger">
+                                <i class="bi bi-x-lg"></i> Reject
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column - Quick Actions & Additional Info -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.user_type in 'household farmer' %}
+                    <a href="{% url 'post_waste' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Post New Waste
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'waste_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Browse All Waste
+                    </a>
+                    
+                    {% if user.user_type in 'collector recycler' %}
+                    <a href="{% url 'waste_list' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-heart"></i> Find Collection Opportunities
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.digital_credits > 0 %}
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-gift"></i> Redeem Credits (Coming Soon)
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit Information -->
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-coin"></i> Your Digital Credits
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h3 class="text-success">{{ user.digital_credits }}</h3>
+                    <p class="text-muted">Available Credits</p>
+                </div>
+                <hr>
+                <h6>Credit Rates:</h6>
+                <ul class="list-unstyled small">
+                    <li>🔄 Plastic: <strong>2 credits/kg</strong></li>
+                    <li>📄 Paper: <strong>1.5 credits/kg</strong></li>
+                    <li>🥫 Metal: <strong>3 credits/kg</strong></li>
+                    <li>🍃 Organic: <strong>0.5 credits/kg</strong></li>
+                    <li>🌾 Agricultural: <strong>0.3 credits/kg</strong></li>
+                    <li>📱 E-Waste: <strong>5 credits/kg</strong></li>
+                </ul>
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-info-circle"></i> Credits can be redeemed for household items or farm inputs.
+                </div>
+            </div>
+        </div>
+
+        <!-- My Active Matches -->
+        {% if matches_made %}
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-heart"></i> My Collection Requests
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for match in matches_made|slice:":5" %}
+                <div class="border-start border-3 ps-3 mb-3 
+                    {% if match.status == 'accepted' %}border-success
+                    {% elif match.status == 'pending' %}border-warning
+                    {% elif match.status == 'rejected' %}border-danger
+                    {% else %}border-secondary{% endif %}">
+                    <h6 class="mb-1">{{ match.waste_item.title }}</h6>
+                    <p class="small text-muted mb-1">
+                        {{ match.waste_item.quantity }} {{ match.waste_item.unit }} • {{ match.waste_item.location }}
+                    </p>
+                    <span class="badge 
+                        {% if match.status == 'accepted' %}bg-success
+                        {% elif match.status == 'pending' %}bg-warning
+                        {% elif match.status == 'rejected' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {{ match.status|title }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Community Impact -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-globe"></i> Community Impact
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <i class="bi bi-recycle display-4 text-success"></i>
+                    <h6 class="mt-2">Together in Machakos</h6>
+                    <p class="small text-muted">
+                        Every waste item collected helps create green jobs, reduce pollution, and build a circular economy in our county.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

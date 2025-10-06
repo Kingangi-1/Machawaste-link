@@ -1,0 +1,78 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold">
+            <i class="bi bi-list-ul text-success"></i> Available Waste Items
+        </h1>
+        <p class="text-muted">Browse waste items available for collection in your community</p>
+    </div>
+    <a href="{% url 'post_waste' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Post Waste
+    </a>
+</div>
+
+{% if waste_items %}
+<div class="row g-4">
+    {% for waste in waste_items %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card waste-card h-100">
+            {% if waste.image %}
+            <img src="{{ waste.image.url }}" class="card-img-top" alt="{{ waste.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-image text-muted fs-1"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title">{{ waste.title }}</h5>
+                    <span class="badge bg-success">{{ waste.status|title }}</span>
+                </div>
+                
+                <p class="card-text text-muted">{{ waste.description|truncatewords:25 }}</p>
+                
+                <div class="waste-meta mb-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if waste.category %}
+                        <span class="badge bg-secondary">{{ waste.category.name }}</span>
+                        {% endif %}
+                        <span class="badge bg-info">{{ waste.quantity }} {{ waste.unit }}</span>
+                    </div>
+                </div>
+                
+                <div class="waste-footer">
+                    <div class="d-flex justify-content-between align-items-center text-sm text-muted">
+                        <small><i class="bi bi-person"></i> {{ waste.poster.username }}</small>
+                        <small><i class="bi bi-geo-alt"></i> {{ waste.location }}</small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small><i class="bi bi-calendar"></i> {{ waste.created_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-success w-100">
+                    <i class="bi bi-eye"></i> View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination would go here -->
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox display-1 text-muted"></i>
+    <h3 class="text-muted mt-3">No waste items available</h3>
+    <p class="text-muted">Be the first to post waste in your community!</p>
+    <a href="{% url 'post_waste' %}" class="btn btn-success btn-lg">
+        <i class="bi bi-plus-circle"></i> Post First Waste Item
+    </a>
+</div>
+{% endif %}
+{% endblock %}
