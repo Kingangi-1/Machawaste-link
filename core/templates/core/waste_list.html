@@ -29,7 +29,9 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <h5 class="card-title">{{ waste.title }}</h5>
-                    <span class="badge bg-success">{{ waste.status|title }}</span>
+                    <span class="badge bg-{% if waste.status == 'available' %}success{% elif waste.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                        {{ waste.status|title }}
+                    </span>
                 </div>
                 
                 <p class="card-text text-muted">{{ waste.description|truncatewords:25 }}</p>
@@ -40,24 +42,83 @@
                         <span class="badge bg-secondary">{{ waste.category.name }}</span>
                         {% endif %}
                         <span class="badge bg-info">{{ waste.quantity }} {{ waste.unit }}</span>
+                        <!-- Credit Value Badge -->
+                        <span class="badge bg-success">
+                            <i class="bi bi-coin"></i> {{ waste.estimated_credits }} credits
+                        </span>
                     </div>
+                </div>
+
+                <!-- Credit Information -->
+                <div class="credit-info mb-3 p-2 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-lightning"></i> Potential Credits:
+                        </small>
+                        <strong class="text-success">{{ waste.estimated_credits }}</strong>
+                    </div>
+                    {% if waste.credits_earned > 0 %}
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle"></i> Credits Earned:
+                        </small>
+                        <strong class="text-primary">{{ waste.credits_earned }}</strong>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div class="waste-footer">
                     <div class="d-flex justify-content-between align-items-center text-sm text-muted">
-                        <small><i class="bi bi-person"></i> {{ waste.poster.username }}</small>
+                        <small>
+                            <i class="bi bi-person"></i> 
+                            {{ waste.poster.username }}
+                            <span class="badge bg-light text-dark ms-1">{{ waste.poster.get_user_type_display }}</span>
+                        </small>
                         <small><i class="bi bi-geo-alt"></i> {{ waste.location }}</small>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <small><i class="bi bi-calendar"></i> {{ waste.created_at|date:"M d, Y" }}</small>
+                        <small class="text-{% if waste.status == 'available' %}success{% elif waste.status == 'pending' %}warning{% else %}muted{% endif %}">
+                            {{ waste.get_waste_type_display }}
+                        </small>
                     </div>
                 </div>
             </div>
             
             <div class="card-footer bg-transparent">
-                <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-success w-100">
-                    <i class="bi bi-eye"></i> View Details
-                </a>
+                <div class="d-grid gap-2">
+                    <!-- View Details Button -->
+                    <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                    
+                    <!-- Request Button (only for collectors and available items) -->
+                    {% if user.is_authenticated and user.user_type == 'collector' and waste.status == 'available' and waste.poster != user %}
+                        <a href="{% url 'request_match' waste.id %}" 
+                           class="btn btn-success"
+                           onclick="return confirm('Are you sure you want to request collection of {{ waste.title }}? You will earn {{ waste.poster.username }} {{ waste.estimated_credits }} credits when collected.')">
+                            <i class="bi bi-hand-thumbs-up"></i> Request Collection
+                        </a>
+                    {% elif user.is_authenticated and user.user_type == 'recycler' and waste.status == 'available' and waste.poster != user %}
+                        <a href="{% url 'request_match' waste.id %}" 
+                           class="btn btn-info"
+                           onclick="return confirm('Are you sure you want to request collection of {{ waste.title }}? You will earn {{ waste.poster.username }} {{ waste.estimated_credits }} credits when collected.')">
+                            <i class="bi bi-recycle"></i> Request for Recycling
+                        </a>
+                    {% elif user.is_authenticated and user.user_type == 'collector' and waste.status != 'available' %}
+                        <button class="btn btn-secondary" disabled>
+                            <i class="bi bi-slash-circle"></i> Not Available
+                        </button>
+                    {% elif user.is_authenticated and waste.poster == user %}
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-person-check"></i> Your Item
+                        </button>
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-success">
+                            <i class="bi bi-box-arrow-in-right"></i> Login to Request
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -69,10 +130,57 @@
 <div class="text-center py-5">
     <i class="bi bi-inbox display-1 text-muted"></i>
     <h3 class="text-muted mt-3">No waste items available</h3>
-    <p class="text-muted">Be the first to post waste in your community!</p>
+    <p class="text-muted">Be the first to post waste in your community and start earning credits!</p>
     <a href="{% url 'post_waste' %}" class="btn btn-success btn-lg">
         <i class="bi bi-plus-circle"></i> Post First Waste Item
     </a>
 </div>
 {% endif %}
+
+<!-- Credit Information Section -->
+<div class="card mt-5">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-coin"></i> How Credit Points Work
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>For Waste Posters (Households/Farmers):</h6>
+                <ul class="list-unstyled">
+                    <li>✅ <strong>Post your waste</strong> - List items you want to dispose</li>
+                    <li>💰 <strong>Earn credits automatically</strong> when waste is collected</li>
+                    <li>🎁 <strong>Redeem credits</strong> for household items or farm inputs</li>
+                    <li>🌱 <strong>Contribute to clean environment</strong> while earning rewards</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Credit Rates (per kg):</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <ul class="list-unstyled small">
+                            <li>🔄 Plastic: <strong>2 credits</strong></li>
+                            <li>📄 Paper: <strong>1.5 credits</strong></li>
+                            <li>🥫 Metal: <strong>3 credits</strong></li>
+                            <li>🍷 Glass: <strong>1 credit</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-6">
+                        <ul class="list-unstyled small">
+                            <li>🍃 Organic: <strong>0.5 credits</strong></li>
+                            <li>🌾 Agricultural: <strong>0.3 credits</strong></li>
+                            <li>📱 E-Waste: <strong>5 credits</strong></li>
+                            <li>👕 Textile: <strong>1 credit</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle"></i> 
+            <strong>Note:</strong> Credit values shown are estimates. Final credit amount is awarded when waste is successfully collected and verified.
+        </div>
+    </div>
+</div>
 {% endblock %}

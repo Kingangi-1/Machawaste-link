@@ -1,4 +1,3 @@
-
 {% extends 'core/base.html' %}
 
 {% block content %}
@@ -125,6 +124,46 @@
 </div>
 {% endif %}
 
+<!---
+
+{% if user.user_type == 'collector' and accepted_matches %}
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-check-circle"></i> Ready for Collection
+        </h5>
+    </div>
+    <div class="card-body">
+        {% for match in accepted_matches %}
+        <div class="border-start border-4 border-success ps-3 mb-3 py-2">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">
+                        <i class="bi bi-trash"></i> {{ match.waste_item.title }}
+                    </h6>
+                    <p class="mb-1"><strong>Type:</strong> {{ match.waste_item.get_waste_type_display }}</p>
+                    <p class="mb-1"><strong>Quantity:</strong> {{ match.waste_item.quantity }} {{ match.waste_item.unit }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ match.waste_item.location }}</p>
+                    <p class="mb-1"><strong>Credits to Award:</strong> {{ match.waste_item.estimated_credits }}</p>
+                    <small class="text-muted">Posted by: {{ match.waste_item.poster.username }}</small>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'manage_match' match.pk 'complete' %}" 
+                       class="btn btn-success btn-lg"
+                       onclick="return confirm('Have you collected {{ match.waste_item.title }} from {{ match.waste_item.poster.username }}? This will award them {{ match.waste_item.estimated_credits }} credits.')">
+                        <i class="bi bi-check-lg"></i> Mark Collected
+                    </a>
+                    <br>
+                    <small class="text-muted mt-2 d-block">Click after physical collection</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+-->
+
 <div class="row g-4">
     <!-- Left Column - Main Content -->
     <div class="col-lg-8">
@@ -145,7 +184,8 @@
                                     <th>Waste Item</th>
                                     <th>Type</th>
                                     <th>Quantity</th>
-                                    <th>Credits</th>
+                                    <th>Estimated Credits</th>
+                                    <th>Credits Earned</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -164,6 +204,9 @@
                                         <span class="badge bg-secondary">{{ waste.get_waste_type_display }}</span>
                                     </td>
                                     <td>{{ waste.quantity }} {{ waste.unit }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ waste.estimated_credits }} credits</span>
+                                    </td>
                                     <td>
                                         {% if waste.credits_earned > 0 %}
                                         <span class="badge bg-success">{{ waste.credits_earned }} credits</span>
@@ -184,6 +227,14 @@
                                         <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> View
                                         </a>
+                                        {% if waste.status == 'collected' and waste.credits_earned == 0 %}
+                                        <form method="post" action="{% url 'complete_waste' waste.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Award Credits">
+                                                <i class="bi bi-coin"></i> Get Credits
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -220,6 +271,7 @@
                                 <th>Waste Item</th>
                                 <th>Type</th>
                                 <th>Quantity</th>
+                                <th>Estimated Credits</th>
                                 <th>Location</th>
                                 <th>Posted By</th>
                                 <th>Action</th>
@@ -237,6 +289,9 @@
                                     <span class="badge bg-secondary">{{ waste.get_waste_type_display }}</span>
                                 </td>
                                 <td>{{ waste.quantity }} {{ waste.unit }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ waste.estimated_credits }} credits</span>
+                                </td>
                                 <td>
                                     <small><i class="bi bi-geo-alt"></i> {{ waste.location }}</small>
                                 </td>
@@ -259,6 +314,8 @@
         </div>
         {% endif %}
 
+
+
         <!-- Match Requests -->
         {% if matches_received %}
         <div class="card mt-4">
@@ -277,6 +334,7 @@
                                 {{ match.collector.username }} wants to collect your waste
                             </h6>
                             <p class="mb-1"><strong>{{ match.waste_item.title }}</strong> - {{ match.waste_item.get_waste_type_display }}</p>
+                            <p class="mb-1"><strong>Potential Credits:</strong> {{ match.waste_item.estimated_credits }}</p>
                             {% if match.message %}
                             <p class="mb-2"><i>"{{ match.message }}"</i></p>
                             {% endif %}
@@ -293,6 +351,84 @@
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    <!-- Accepted Collections (for Collectors) -->
+{% if user.user_type == 'collector' and accepted_matches %}
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-check-circle"></i> Ready for Collection
+        </h5>
+    </div>
+    <div class="card-body">
+        {% for match in accepted_matches %}
+        <div class="alert alert-success">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="alert-heading">
+                        <i class="bi bi-trash"></i> {{ match.waste_item.title }}
+                    </h6>
+                    <p class="mb-1"><strong>Type:</strong> {{ match.waste_item.get_waste_type_display }}</p>
+                    <p class="mb-1"><strong>Quantity:</strong> {{ match.waste_item.quantity }} {{ match.waste_item.unit }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ match.waste_item.location }}</p>
+                    <p class="mb-1"><strong>Credits to Award:</strong> {{ match.waste_item.estimated_credits }}</p>
+                    <small class="text-muted">Posted by: {{ match.waste_item.poster.username }}</small>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'manage_match' match.pk 'complete' %}" 
+                       class="btn btn-success btn-lg"
+                       onclick="return confirm('Have you collected {{ match.waste_item.title }} from {{ match.waste_item.poster.username }}? This will award them {{ match.waste_item.estimated_credits }} credits.')">
+                        <i class="bi bi-check-lg"></i> Mark Collected
+                    </a>
+                    <br>
+                    <small class="text-muted mt-2 d-block">Click after physical collection</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+        <!-- Recent Credit Transactions -->
+        {% if recent_transactions %}
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> Recent Credit Transactions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for transaction in recent_transactions %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 {% if transaction.transaction_type == 'credit' %}text-success{% else %}text-danger{% endif %}">
+                                {% if transaction.transaction_type == 'credit' %}
+                                <i class="bi bi-arrow-down-circle text-success"></i>
+                                {% else %}
+                                <i class="bi bi-arrow-up-circle text-danger"></i>
+                                {% endif %}
+                                {{ transaction.reason }}
+                            </h6>
+                            <small class="text-muted">{{ transaction.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <span class="badge {% if transaction.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}{{ transaction.amount }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if transaction_count > 5 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'user_credits' %}" class="btn btn-outline-success btn-sm">
+                        View All Transactions
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -317,6 +453,10 @@
                     
                     <a href="{% url 'waste_list' %}" class="btn btn-outline-primary">
                         <i class="bi bi-search"></i> Browse All Waste
+                    </a>
+
+                    <a href="{% url 'user_credits' %}" class="btn btn-outline-success">
+                        <i class="bi bi-wallet2"></i> Credit History
                     </a>
                     
                     {% if user.user_type in 'collector recycler' %}
@@ -347,17 +487,20 @@
                     <p class="text-muted">Available Credits</p>
                 </div>
                 <hr>
-                <h6>Credit Rates:</h6>
+                <h6>Credit Rates (per kg):</h6>
                 <ul class="list-unstyled small">
-                    <li>🔄 Plastic: <strong>2 credits/kg</strong></li>
-                    <li>📄 Paper: <strong>1.5 credits/kg</strong></li>
-                    <li>🥫 Metal: <strong>3 credits/kg</strong></li>
-                    <li>🍃 Organic: <strong>0.5 credits/kg</strong></li>
-                    <li>🌾 Agricultural: <strong>0.3 credits/kg</strong></li>
-                    <li>📱 E-Waste: <strong>5 credits/kg</strong></li>
+                    <li>🔄 Plastic: <strong>2 credits</strong></li>
+                    <li>📄 Paper/Cardboard: <strong>1.5 credits</strong></li>
+                    <li>🥫 Metal: <strong>3 credits</strong></li>
+                    <li>🍷 Glass: <strong>1 credit</strong></li>
+                    <li>🍃 Organic: <strong>0.5 credits</strong></li>
+                    <li>🌾 Agricultural: <strong>0.3 credits</strong></li>
+                    <li>📱 E-Waste: <strong>5 credits</strong></li>
+                    <li>👕 Textile: <strong>1 credit</strong></li>
+                    <li>📦 Other: <strong>1 credit</strong></li>
                 </ul>
                 <div class="alert alert-warning small mb-0">
-                    <i class="bi bi-info-circle"></i> Credits can be redeemed for household items or farm inputs.
+                    <i class="bi bi-info-circle"></i> Credits are awarded automatically when waste is marked as collected.
                 </div>
             </div>
         </div>
@@ -381,6 +524,9 @@
                     <p class="small text-muted mb-1">
                         {{ match.waste_item.quantity }} {{ match.waste_item.unit }} • {{ match.waste_item.location }}
                     </p>
+                    <p class="small mb-1">
+                        <strong>Credits:</strong> {{ match.waste_item.estimated_credits }}
+                    </p>
                     <span class="badge 
                         {% if match.status == 'accepted' %}bg-success
                         {% elif match.status == 'pending' %}bg-warning
@@ -393,6 +539,32 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Credit Summary -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i> Credit Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="text-success">{{ credits_this_month }}</h5>
+                        <small class="text-muted">This Month</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-primary">{{ total_credits_earned }}</h5>
+                        <small class="text-muted">Total Earned</small>
+                    </div>
+                </div>
+                <hr>
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-lightbulb"></i> 
+                    You've earned <strong>{{ total_credits_earned }}</strong> credits total from waste collection.
+                </p>
+            </div>
+        </div>
 
         <!-- Community Impact -->
         <div class="card mt-4">

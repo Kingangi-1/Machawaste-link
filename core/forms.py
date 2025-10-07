@@ -150,23 +150,32 @@ class WasteItemForm(forms.ModelForm):
         if not WasteCategory.objects.exists():
             WasteCategory.objects.create(name="General Waste", description="General waste materials")
         
-        # Add Bootstrap classes to all fields
+        # Add Bootstrap classes and placeholders to all fields
         for field_name, field in self.fields.items():
             if field_name == 'category' or field_name == 'unit':
                 field.widget.attrs['class'] = 'form-select'
+                if field_name == 'category':
+                    field.empty_label = "Select waste category..."  # Placeholder for select
             elif field_name == 'image':
                 field.widget.attrs['class'] = 'form-control file-upload'
             elif field_name == 'description':
                 field.widget.attrs['class'] = 'form-control'
                 field.widget.attrs['rows'] = 4
+                field.widget.attrs['placeholder'] = 'Describe your waste items in detail. Include condition, materials, and any special handling requirements...'
             else:
                 field.widget.attrs['class'] = 'form-control'
+                
+        # Add specific placeholders for each field
+        self.fields['title'].widget.attrs['placeholder'] = 'e.g., Plastic Bottles, Old Newspapers, Metal Cans, E-Waste...'
+        self.fields['quantity'].widget.attrs['placeholder'] = 'e.g., 5.0'
+        self.fields['location'].widget.attrs['placeholder'] = 'e.g., Nairobi CBD, Westlands, Mombasa Island, Kisumu...'
 
     class Meta:
         model = WasteItem
         fields = ['title', 'description', 'category', 'quantity', 'unit', 'location', 'image']
         widgets = {
             'unit': forms.Select(choices=[
+                ('', 'Select unit...'),  # Added placeholder option
                 ('kg', 'Kilograms (kg)'),
                 ('g', 'Grams (g)'), 
                 ('lbs', 'Pounds (lbs)'),

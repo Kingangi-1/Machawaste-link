@@ -107,17 +107,39 @@
             border-radius: 0 0 30px 30px;
             margin-bottom: 3rem;
         }
+        
+        /* Logout form styling */
+        .logout-form {
+            display: inline;
+        }
+        
+        .logout-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.75);
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .logout-btn:hover {
+            color: white;
+            background: none;
+        }
+        
+        .nav-link.logout-btn:hover {
+            color: white;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container">
-            <!-- In the navbar section, replace WasteHub with Machawaste Link -->
-             
-    <a class="navbar-brand" href="{% url 'home' %}">
-        <i class="bi bi-recycle"></i> Machawaste Link
-                </a>
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="bi bi-recycle"></i> Machawaste Link
+            </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -150,9 +172,13 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
+                        <!-- Updated logout to use POST method with CSRF token -->
+                        <form method="post" action="{% url 'logout' %}" class="logout-form">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link logout-btn">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
                     </li>
                     {% else %}
                     <li class="nav-item">
@@ -205,25 +231,28 @@
     
     <!-- Custom JS -->
     <script>
-        // Auto-dismiss alerts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            // Only auto-dismiss flash message alerts, not collection sections
+            if (alert.closest('.messages-container')) {
                 setTimeout(() => {
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();
                 }, 5000);
-            });
-            
-            // Add active class to current page in navigation
-            const currentUrl = window.location.pathname;
-            document.querySelectorAll('.nav-link').forEach(link => {
-                if (link.getAttribute('href') === currentUrl) {
-                    link.classList.add('active');
-                    link.setAttribute('aria-current', 'page');
-                }
-            });
+            }
         });
-    </script>
+        
+        // Add active class to current page in navigation
+        const currentUrl = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentUrl) {
+                link.classList.add('active');
+                link.setAttribute('aria-current', 'page');
+            }
+        });
+    });
+</script>
 </body>
 </html>
