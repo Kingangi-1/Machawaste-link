@@ -187,15 +187,16 @@ def register(request):
 # start of dashboard view
 @login_required
 def dashboard(request):
+    # Only show PENDING collection requests
     user_waste = WasteItem.objects.filter(poster=request.user)
-    matches_received = Match.objects.filter(waste_item__poster=request.user)
+    matches_received = Match.objects.filter(waste_item__poster=request.user, status='pending')  # ✅ ADDED STATUS FILTER
     
     # Different views based on user type
     if request.user.user_type in ['collector', 'recycler']:
         available_waste = WasteItem.objects.filter(status='available').exclude(poster=request.user)
         matches_made = Match.objects.filter(collector=request.user)
         
-        # NEW: Show accepted matches that need completion
+        # Show accepted matches that need completion
         accepted_matches = Match.objects.filter(
             collector=request.user, 
             status='accepted'
@@ -212,7 +213,7 @@ def dashboard(request):
     # Statistics for dashboard
     total_waste_posted = user_waste.count()
     total_credits_earned = sum([waste.credits_earned for waste in user_waste])
-    pending_matches = matches_received.filter(status='pending').count()
+    pending_matches = matches_received.count()  # This will now match what's displayed
     
     # Credit transaction data
     recent_transactions = CreditTransaction.objects.filter(user=request.user).order_by('-created_at')[:5]
@@ -239,7 +240,7 @@ def dashboard(request):
         'matches_received': matches_received,
         'available_waste': available_waste,
         'matches_made': matches_made,
-        'accepted_matches': accepted_matches,  # NEW
+        'accepted_matches': accepted_matches,
         'total_waste_posted': total_waste_posted,
         'total_credits_earned': total_credits_earned,
         'pending_matches': pending_matches,
