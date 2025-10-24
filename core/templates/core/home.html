@@ -84,7 +84,7 @@
 </section>
 
 <!-- Recent Waste Section -->
-{% if recent_waste %}
+{% if recent_waste and recent_waste.count > 0 %}
 <section class="container my-5">
     <div class="row mb-4">
         <div class="col">
@@ -98,17 +98,23 @@
         <div class="col-md-6 col-lg-4">
             <div class="card waste-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ waste.title }}</h5>
-                    <p class="card-text text-muted">{{ waste.description|truncatewords:20 }}</p>
+                    <h5 class="card-title">{{ waste.title|default:"Untitled" }}</h5>
+                    <p class="card-text text-muted">{{ waste.description|truncatewords:20|default:"No description available" }}</p>
                     <div class="d-flex justify-content-between align-items-center text-sm text-muted">
-                        <small><i class="bi bi-person"></i> {{ waste.poster.username }}</small>
-                        <small><i class="bi bi-calendar"></i> {{ waste.created_at|date:"M d" }}</small>
+                        <small><i class="bi bi-person"></i> {{ waste.poster.username|default:"Unknown" }}</small>
+                        <small><i class="bi bi-calendar"></i> {{ waste.created_at|date:"M d"|default:"Unknown date" }}</small>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
+                    {% if waste.pk %}
                     <a href="{% url 'waste_detail' waste.pk %}" class="btn btn-sm btn-outline-success w-100">
                         View Details
                     </a>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-secondary w-100" disabled>
+                        No Details
+                    </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
